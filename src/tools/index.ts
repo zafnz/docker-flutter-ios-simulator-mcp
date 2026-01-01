@@ -299,7 +299,7 @@ export function registerTools(mcpServer: McpServer): void {
       },
       {
         name: 'screenshot',
-        description: 'Take a screenshot of the simulator and save to file.',
+        description: 'Take a screenshot of the simulator. Returns base64-encoded PNG image data in the response for use from Docker containers. Optional outputPath for local file save.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -309,10 +309,10 @@ export function registerTools(mcpServer: McpServer): void {
             },
             outputPath: {
               type: 'string',
-              description: 'Path where screenshot should be saved',
+              description: 'Optional path where screenshot should be saved on host filesystem',
             },
           },
-          required: ['sessionId', 'outputPath'],
+          required: ['sessionId'],
         },
       },
     ],

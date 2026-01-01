@@ -1,5 +1,8 @@
 import { exec } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
+import { readFileSync, mkdtempSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 
 export interface TapOptions {
   x: number;
@@ -17,6 +20,8 @@ export interface SwipeOptions {
 
 export interface ScreenshotResult {
   path: string;
+  imageData: string;
+  format: string;
 }
 
 /**
@@ -147,21 +152,39 @@ export async function describePoint(udid: string, x: number, y: number): Promise
 /**
  * Take a screenshot and save to file
  */
-export async function screenshot(udid: string, outputPath: string): Promise<ScreenshotResult> {
+export async function screenshot(udid: string, outputPath?: string): Promise<ScreenshotResult> {
   logger.debug('IDB screenshot', { udid, outputPath });
 
+  // Create temp file for screenshot
+  const tempDir = mkdtempSync(join(tmpdir(), 'mcp-screenshot-'));
+  const tempPath = join(tempDir, 'screenshot.png');
+
   const { exitCode, stderr } = await exec(
-    `idb screenshot --udid ${udid} "${outputPath}"`,
+    `idb screenshot --udid ${udid} "${tempPath}"`,
     { timeout: 15000 }
   );
 
   if (exitCode !== 0) {
     throw new Error(
-      `Failed to take screenshot on simulator ${udid} to path "${outputPath}": ${stderr}. ` +
-      'Ensure the simulator is booted and the output directory is writable.'
+      `Failed to take screenshot on simulator ${udid}: ${stderr}. ` +
+      'Ensure the simulator is booted.'
     );
   }
 
-  logger.info('Screenshot saved', { udid, outputPath });
-  return { path: outputPath };
+  // Read screenshot and encode as base64
+  const imageBuffer = readFileSync(tempPath);
+  const imageData = imageBuffer.toString('base64');
+
+  logger.info('Screenshot captured', {
+    udid,
+    outputPath,
+    tempPath,
+    sizeBytes: imageBuffer.length
+  });
+
+  return {
+    path: outputPath || tempPath,
+    imageData,
+    format: 'png'
+  };
 }

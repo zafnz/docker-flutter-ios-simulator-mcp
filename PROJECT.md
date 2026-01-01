@@ -135,8 +135,8 @@ flutter-ios-mcp/
 | `ui_tap` | Tap at coordinates (optional duration for long press) |
 | `ui_type` | Input text |
 | `ui_swipe` | Swipe gesture with start/end coordinates |
+| `screenshot` | Take screenshot, returns base64-encoded PNG in response (Docker-compatible) |
 | `ui_view` | Get compressed screenshot as base64 (for LLM vision) |
-| `screenshot` | Save full screenshot to file path |
 | `install_app` | Install .app bundle on simulator |
 | `launch_app` | Launch app by bundle identifier |
 
@@ -228,6 +228,12 @@ flutter-ios-mcp/
 - Tools return structured errors with actionable messages
 - Process failures include last N lines of output
 - Session operations are idempotent where possible
+
+### Docker Compatibility
+- Screenshot tool returns base64-encoded image data in MCP response
+- No filesystem access needed for Docker clients to view screenshots
+- outputPath is optional - use for local file saves on host
+- All data transported over MCP protocol (HTTP or stdio)
 
 ## Dependencies
 

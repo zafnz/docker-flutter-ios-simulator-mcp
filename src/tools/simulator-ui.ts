@@ -36,7 +36,7 @@ export const uiDescribePointSchema = z.object({
 
 export const screenshotSchema = z.object({
   sessionId: z.string().describe('Session ID'),
-  outputPath: z.string().describe('Path where screenshot should be saved'),
+  outputPath: z.string().optional().describe('Optional path where screenshot should be saved'),
 });
 
 export async function handleUiTap(
@@ -139,7 +139,13 @@ export async function handleUiDescribePoint(
 
 export async function handleScreenshot(
   args: z.infer<typeof screenshotSchema>
-): Promise<{ success: boolean; path: string; message: string }> {
+): Promise<{
+  success: boolean;
+  path: string;
+  imageData: string;
+  format: string;
+  message: string;
+}> {
   logger.info('Tool: screenshot', args);
 
   const session = sessionManager.getSession(args.sessionId);
@@ -152,6 +158,8 @@ export async function handleScreenshot(
   return {
     success: true,
     path: result.path,
-    message: `Screenshot saved to ${result.path}`,
+    imageData: result.imageData,
+    format: result.format,
+    message: `Screenshot captured (${result.imageData.length} bytes base64)`,
   };
 }
