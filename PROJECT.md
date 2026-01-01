@@ -149,12 +149,12 @@ flutter-ios-mcp/
 ## Implementation Phases
 
 ### Phase 1: Foundation
-- [ ] Project scaffolding (package.json, tsconfig, etc.)
-- [ ] Express server with Streamable HTTP transport
-- [ ] MCP server initialization
-- [ ] Session manager with in-memory state
-- [ ] Simulator control: `simctl create`, `boot`, `shutdown`, `delete`
-- [ ] Tools: `session_start`, `session_end`, `session_list`, `simulator_list`
+- [x] Project scaffolding (package.json, tsconfig, eslint, jest configs)
+- [x] Express server with Streamable HTTP transport
+- [x] MCP server initialization and tool registration
+- [x] Session manager with in-memory state (SessionManager + sessionState)
+- [x] Simulator control: `simctl create`, `boot`, `shutdown`, `delete`
+- [x] Tools: `session_start`, `session_end`, `session_list`, `simulator_list`
 
 ### Phase 2: Flutter Process Core
 - [x] Flutter process spawning with pipes (via spawnStreaming)
