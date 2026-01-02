@@ -239,7 +239,9 @@ OPTIONS:
   -p, --port <port>              Port to listen on (default: 3000)
       --host <host>              Host address to bind to (default: 127.0.0.1)
       --allow-only <path>        Only allow Flutter projects under this path (default: /Users/)
+      --base-path <path>         Base path for relative worktree paths (optional)
       --max-sessions <number>    Maximum number of concurrent sessions (default: 10)
+      --session-timeout <mins>   Terminate inactive sessions after N minutes (optional)
       --pre-build-script <cmd>   Command to run before flutter build/run (e.g., "git pull")
       --post-build-script <cmd>  Command to run after flutter build/run completes
   -h, --help                     Show this help message
@@ -252,7 +254,9 @@ OPTIONS:
 | `PORT` | HTTP server port | `3000` |
 | `HOST` | Server bind address (use `0.0.0.0` for Docker) | `127.0.0.1` |
 | `ALLOW_ONLY` | Path prefix for allowed Flutter projects | `/Users/` |
+| `BASE_PATH` | Base path for resolving relative worktree paths | (none) |
 | `MAX_SESSIONS` | Maximum number of concurrent sessions | `10` |
+| `SESSION_TIMEOUT` | Terminate inactive sessions after N minutes | (none) |
 | `PRE_BUILD_SCRIPT` | Command to run before flutter build/run | (none) |
 | `POST_BUILD_SCRIPT` | Command to run after flutter build/run | (none) |
 | `LOG_LEVEL` | Logging verbosity (`debug`, `info`, `warn`, `error`) | `info` |
@@ -272,6 +276,12 @@ npx docker-flutter-ios-simulator-mcp --host 0.0.0.0
 # Restrict to specific directory
 npx docker-flutter-ios-simulator-mcp --allow-only /Users/alice/flutter-projects
 
+# Use base path for relative worktree paths
+npx docker-flutter-ios-simulator-mcp --base-path /Users/alice/flutter-projects
+
+# Auto-cleanup inactive sessions after 30 minutes
+npx docker-flutter-ios-simulator-mcp --session-timeout 30
+
 # Allow more concurrent sessions
 npx docker-flutter-ios-simulator-mcp --max-sessions 20
 
@@ -282,7 +292,7 @@ npx docker-flutter-ios-simulator-mcp --pre-build-script "git pull"
 npx docker-flutter-ios-simulator-mcp --pre-build-script "git pull" --post-build-script "echo Build complete"
 
 # Multiple options
-npx docker-flutter-ios-simulator-mcp --port 8080 --host 0.0.0.0 --allow-only /Users/alice --max-sessions 15
+npx docker-flutter-ios-simulator-mcp --port 8080 --host 0.0.0.0 --base-path /Users/alice/projects --session-timeout 60 --max-sessions 15
 ```
 
 ### Security
