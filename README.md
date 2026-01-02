@@ -2,7 +2,7 @@
 
 **Model Context Protocol server for Flutter iOS development with AI agents**
 
-Enables AI agents (like Claude) to build, run, and interact with Flutter iOS applications through an iOS Simulator on macOS. Perfect for AI-assisted mobile app development, automated testing, and interactive debugging.
+Enables AI agents (like Claude) inside a Docker container to build, run, and interact with Flutter iOS applications through an iOS Simulator running on the host. Perfect for running claude inside a secure container while allowing it to build and test iOS and macOS apps
 
 ## Features
 
@@ -176,19 +176,54 @@ session_end({ sessionId: "abc-123" })
 
 ## Configuration
 
+### Command-Line Options
+
+```bash
+flutter-ios-mcp [OPTIONS]
+
+OPTIONS:
+  -p, --port <port>         Port to listen on (default: 3000)
+      --host <host>         Host address to bind to (default: 127.0.0.1)
+      --allow-only <path>   Only allow Flutter projects under this path (default: /Users/)
+  -h, --help                Show this help message
+```
+
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | HTTP server port | `3000` |
-| `HOST` | Server bind address | `0.0.0.0` |
+| `HOST` | Server bind address (use `0.0.0.0` for Docker) | `127.0.0.1` |
+| `ALLOW_ONLY` | Path prefix for allowed Flutter projects | `/Users/` |
 | `LOG_LEVEL` | Logging verbosity (`debug`, `info`, `warn`, `error`) | `info` |
 
-### Custom Port
+### Examples
 
 ```bash
-PORT=8080 npx flutter-ios-mcp
+# Default (localhost only, /Users/ projects)
+npx flutter-ios-mcp
+
+# Custom port
+npx flutter-ios-mcp --port 8080
+
+# Docker (bind to all interfaces)
+npx flutter-ios-mcp --host 0.0.0.0
+
+# Restrict to specific directory
+npx flutter-ios-mcp --allow-only /Users/alice/flutter-projects
+
+# Multiple options
+npx flutter-ios-mcp --port 8080 --host 0.0.0.0 --allow-only /Users/alice
 ```
+
+### Security
+
+By default, the server:
+- Binds to `127.0.0.1` (localhost only) for security
+- Only allows Flutter projects under `/Users/` to prevent access to system directories
+- Validates all project paths have a `pubspec.yaml` file
+
+For Docker deployments, use `--host 0.0.0.0` to allow container access.
 
 ## Troubleshooting
 

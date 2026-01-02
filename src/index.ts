@@ -14,7 +14,7 @@ interface CliArgs {
 function parseArgs(): CliArgs {
   const args = process.argv.slice(2);
   let port = parseInt(process.env.PORT || '3000', 10);
-  let host = process.env.HOST || '0.0.0.0';
+  let host = process.env.HOST || '127.0.0.1';
   let help = false;
   let allowOnly = process.env.ALLOW_ONLY || '/Users/';
 
@@ -63,7 +63,7 @@ USAGE:
 
 OPTIONS:
   -p, --port <port>         Port to listen on (default: 3000)
-      --host <host>         Host address to bind to (default: 0.0.0.0)
+      --host <host>         Host address to bind to (default: 127.0.0.1)
       --allow-only <path>   Only allow Flutter projects under this path (default: /Users/)
   -h, --help                Show this help message
 
