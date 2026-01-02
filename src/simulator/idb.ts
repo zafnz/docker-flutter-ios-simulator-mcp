@@ -40,7 +40,7 @@ export async function tap(udid: string, options: TapOptions): Promise<void> {
 
   if (exitCode !== 0) {
     throw new Error(
-      `Failed to tap at (${options.x}, ${options.y}) on simulator ${udid}: ${stderr}. ` +
+      `Failed to tap at (${String(options.x)}, ${String(options.y)}) on simulator ${udid}: ${stderr}. ` +
       'Ensure the simulator is booted and IDB companion is running.'
     );
   }
@@ -95,7 +95,7 @@ export async function swipe(udid: string, options: SwipeOptions): Promise<void> 
 
   if (exitCode !== 0) {
     throw new Error(
-      `Failed to swipe from (${options.x_start}, ${options.y_start}) to (${options.x_end}, ${options.y_end}) on simulator ${udid}: ${stderr}. ` +
+      `Failed to swipe from (${String(options.x_start)}, ${String(options.y_start)}) to (${String(options.x_end)}, ${String(options.y_end)}) on simulator ${udid}: ${stderr}. ` +
       'Ensure the simulator is booted and responsive.'
     );
   }
@@ -140,7 +140,7 @@ export async function describePoint(udid: string, x: number, y: number): Promise
 
   if (exitCode !== 0) {
     throw new Error(
-      `Failed to describe point (${x}, ${y}) on simulator ${udid}: ${stderr}. ` +
+      `Failed to describe point (${String(x)}, ${String(y)}) on simulator ${udid}: ${stderr}. ` +
       'Ensure the simulator is booted with an app running.'
     );
   }
@@ -152,8 +152,8 @@ export async function describePoint(udid: string, x: number, y: number): Promise
 /**
  * Take a screenshot and save to file
  */
-export async function screenshot(udid: string, outputPath?: string): Promise<ScreenshotResult> {
-  logger.debug('IDB screenshot', { udid, outputPath });
+export async function screenshot(udid: string): Promise<ScreenshotResult> {
+  logger.debug('IDB screenshot', { udid });
 
   // Create temp file for screenshot
   const tempDir = mkdtempSync(join(tmpdir(), 'mcp-screenshot-'));
@@ -178,13 +178,12 @@ export async function screenshot(udid: string, outputPath?: string): Promise<Scr
 
   logger.info('Screenshot captured', {
     udid,
-    outputPath,
     tempPath,
     sizeBytes: imageBuffer.length
   });
 
   return {
-    path: outputPath || tempPath,
+    path: tempPath,
     imageData,
     format: 'png'
   };

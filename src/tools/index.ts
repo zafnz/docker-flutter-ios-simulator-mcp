@@ -307,10 +307,6 @@ export function registerTools(mcpServer: McpServer): void {
               type: 'string',
               description: 'Session ID from session_start',
             },
-            outputPath: {
-              type: 'string',
-              description: 'Optional: Path to also save screenshot on host filesystem (rarely needed)',
-            },
           },
           required: ['sessionId'],
         },
@@ -447,7 +443,7 @@ export function registerTools(mcpServer: McpServer): void {
               },
               {
                 type: 'text',
-                text: `Screenshot captured: ${result.path}\nSize: ${result.imageData.length} bytes (base64)`,
+                text: `Screenshot captured: ${result.path}\nSize: ${String(result.imageData.length)} bytes (base64)`,
               },
             ],
           };

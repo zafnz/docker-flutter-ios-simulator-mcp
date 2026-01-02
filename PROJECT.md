@@ -234,7 +234,6 @@ flutter-ios-mcp/
 ### Docker Compatibility
 - Screenshot tool returns base64-encoded image data in MCP response
 - No filesystem access needed for Docker clients to view screenshots
-- outputPath is optional - use for local file saves on host
 - All data transported over MCP protocol (HTTP or stdio)
 
 ## Dependencies

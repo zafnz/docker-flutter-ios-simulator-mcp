@@ -36,7 +36,6 @@ export const uiDescribePointSchema = z.object({
 
 export const screenshotSchema = z.object({
   sessionId: z.string().describe('Session ID'),
-  outputPath: z.string().optional().describe('Optional path where screenshot should be saved'),
 });
 
 export async function handleUiTap(
@@ -57,7 +56,7 @@ export async function handleUiTap(
 
   return {
     success: true,
-    message: `Tapped at (${args.x}, ${args.y})${args.duration ? ` for ${args.duration}s` : ''}`,
+    message: `Tapped at (${String(args.x)}, ${String(args.y)})${args.duration ? ` for ${String(args.duration)}s` : ''}`,
   };
 }
 
@@ -75,7 +74,7 @@ export async function handleUiType(
 
   return {
     success: true,
-    message: `Typed ${args.text.length} characters`,
+    message: `Typed ${String(args.text.length)} characters`,
   };
 }
 
@@ -99,7 +98,7 @@ export async function handleUiSwipe(
 
   return {
     success: true,
-    message: `Swiped from (${args.x_start}, ${args.y_start}) to (${args.x_end}, ${args.y_end})`,
+    message: `Swiped from (${String(args.x_start)}, ${String(args.y_start)}) to (${String(args.x_end)}, ${String(args.y_end)})`,
   };
 }
 
@@ -153,13 +152,13 @@ export async function handleScreenshot(
     throw new Error(`Session not found: ${args.sessionId}`);
   }
 
-  const result = await idb.screenshot(session.simulatorUdid, args.outputPath);
+  const result = await idb.screenshot(session.simulatorUdid);
 
   return {
     success: true,
     path: result.path,
     imageData: result.imageData,
     format: result.format,
-    message: `Screenshot captured (${result.imageData.length} bytes base64)`,
+    message: `Screenshot captured (${String(result.imageData.length)} bytes base64)`,
   };
 }

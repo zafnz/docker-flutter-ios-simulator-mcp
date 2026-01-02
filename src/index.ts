@@ -126,7 +126,7 @@ async function main(): Promise<void> {
 
   server.on('error', (error: NodeJS.ErrnoException) => {
     if (error.code === 'EADDRINUSE') {
-      logger.error(`Port ${PORT} is already in use`);
+      logger.error(`Port ${String(PORT)} is already in use`);
       process.exit(1);
     } else {
       logger.error('Server error', { error: error.message });

@@ -2,6 +2,8 @@ import { spawnStreaming, SpawnedProcess } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
 import { LogBuffer } from './log-buffer.js';
 import { FlutterProcess, FlutterRunOptions } from './types.js';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
 
 export class FlutterProcessManager {
   private process?: SpawnedProcess;
@@ -23,6 +25,68 @@ export class FlutterProcessManager {
       worktreePath: options.worktreePath,
       deviceId: options.deviceId,
     });
+
+    // Security: Validate target file
+    if (options.target) {
+      // Validate target is a relative path within worktree
+      const targetPath = resolve(options.worktreePath, options.target);
+
+      // Ensure target doesn't escape worktree (path traversal protection)
+      if (!targetPath.startsWith(resolve(options.worktreePath))) {
+        throw new Error(
+          `Security: Target file must be within project directory. ` +
+          `Target: ${options.target}`
+        );
+      }
+
+      // Validate target exists and is a .dart file
+      if (!existsSync(targetPath)) {
+        throw new Error(`Target file does not exist: ${options.target}`);
+      }
+
+      if (!targetPath.endsWith('.dart')) {
+        throw new Error(
+          `Target must be a Dart file (.dart extension). ` +
+          `Provided: ${options.target}`
+        );
+      }
+    }
+
+    // Security: Validate flavor name
+    if (options.flavor) {
+      // Only allow alphanumeric, hyphen, and underscore
+      if (!/^[a-zA-Z0-9_-]+$/.test(options.flavor)) {
+        throw new Error(
+          `Invalid flavor name: ${options.flavor}. ` +
+          `Flavor must contain only letters, numbers, hyphens, and underscores.`
+        );
+      }
+    }
+
+    // Security: Validate additionalArgs against allowlist
+    if (options.additionalArgs) {
+      const ALLOWED_ARGS = new Set([
+        '--debug',
+        '--release',
+        '--profile',
+        '--no-sound-null-safety',
+        '--enable-software-rendering',
+        '--verbose',
+        '-v',
+      ]);
+
+      for (const arg of options.additionalArgs) {
+        // Allow arguments from allowlist or --dart-define=KEY=VALUE
+        const isAllowed = ALLOWED_ARGS.has(arg) || arg.startsWith('--dart-define=');
+
+        if (!isAllowed) {
+          throw new Error(
+            `Invalid Flutter argument: ${arg}. ` +
+            `Allowed arguments: ${Array.from(ALLOWED_ARGS).join(', ')}, --dart-define=KEY=VALUE`
+          );
+        }
+      }
+    }
 
     const args = ['run', '-d', options.deviceId];
 

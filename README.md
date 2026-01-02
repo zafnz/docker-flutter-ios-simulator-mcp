@@ -248,7 +248,6 @@ For Docker deployments, use `--host 0.0.0.0` to allow container access.
 ### Screenshots not appearing
 - Screenshots are returned as images in the MCP response
 - They work automatically with Docker containers (no filesystem needed)
-- Use the optional `outputPath` parameter only if you need a local file
 
 ### First Flutter build is slow
 - First build can take 1-2 minutes (normal)
