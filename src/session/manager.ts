@@ -58,7 +58,7 @@ export class SessionManager {
       allowedPathPrefix,
       basePath: basePath || 'none',
       maxSessions: this.maxSessions,
-      sessionTimeout: sessionTimeoutMinutes ? `${sessionTimeoutMinutes} minutes` : 'none',
+      sessionTimeout: sessionTimeoutMinutes ? `${String(sessionTimeoutMinutes)} minutes` : 'none',
       preBuildScript: preBuildScript || 'none',
       postBuildScript: postBuildScript || 'none',
     });
