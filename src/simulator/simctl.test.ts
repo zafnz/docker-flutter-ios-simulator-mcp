@@ -1,10 +1,10 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import type { ExecResult } from '../utils/exec.js';
 
-const mockExec = jest.fn<() => Promise<ExecResult>>();
+const mockExecFile = jest.fn<() => Promise<ExecResult>>();
 
 jest.unstable_mockModule('../utils/exec.js', () => ({
-  exec: mockExec,
+  execFile: mockExecFile,
 }));
 
 const {
@@ -19,12 +19,12 @@ const {
 
 describe('simctl', () => {
   beforeEach(() => {
-    mockExec.mockClear();
+    mockExecFile.mockClear();
   });
 
   describe('listDeviceTypes', () => {
     it('should list iPhone device types', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: JSON.stringify({
           devicetypes: [
             { name: 'iPhone 16 Pro', identifier: 'com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro' },
@@ -44,7 +44,7 @@ describe('simctl', () => {
     });
 
     it('should throw error on failure', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: 'command failed',
         exitCode: 1,
@@ -56,7 +56,7 @@ describe('simctl', () => {
 
   describe('getDeviceTypeIdentifier', () => {
     beforeEach(() => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: JSON.stringify({
           devicetypes: [
             { name: 'iPhone 16 Pro', identifier: 'com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro' },
@@ -85,7 +85,7 @@ describe('simctl', () => {
 
   describe('createSimulator', () => {
     it('should create simulator', async () => {
-      mockExec
+      mockExecFile
         .mockResolvedValueOnce({
           stdout: JSON.stringify({
             devicetypes: [
@@ -104,13 +104,13 @@ describe('simctl', () => {
       const udid = await createSimulator('iPhone 16 Pro');
 
       expect(udid).toBe('ABCD-1234-EFGH-5678');
-      expect(mockExec).toHaveBeenCalledTimes(2);
+      expect(mockExecFile).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('bootSimulator', () => {
     it('should boot simulator', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: '',
         exitCode: 0,
@@ -118,13 +118,15 @@ describe('simctl', () => {
 
       await bootSimulator('TEST-UDID');
 
-      expect(mockExec).toHaveBeenCalledWith(
-        expect.stringContaining('boot TEST-UDID')
+      expect(mockExecFile).toHaveBeenCalledWith(
+        'xcrun',
+        ['simctl', 'boot', 'TEST-UDID'],
+        expect.any(Object)
       );
     });
 
     it('should handle already booted simulator', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: 'Unable to boot device in current state: Booted',
         exitCode: 1,
@@ -136,7 +138,7 @@ describe('simctl', () => {
 
   describe('shutdownSimulator', () => {
     it('should shutdown simulator', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: '',
         exitCode: 0,
@@ -144,13 +146,14 @@ describe('simctl', () => {
 
       await shutdownSimulator('TEST-UDID');
 
-      expect(mockExec).toHaveBeenCalledWith(
-        expect.stringContaining('shutdown TEST-UDID')
+      expect(mockExecFile).toHaveBeenCalledWith(
+        'xcrun',
+        ['simctl', 'shutdown', 'TEST-UDID']
       );
     });
 
     it('should handle already shutdown simulator', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: 'Unable to shutdown device in current state: Shutdown',
         exitCode: 1,
@@ -162,7 +165,7 @@ describe('simctl', () => {
 
   describe('deleteSimulator', () => {
     it('should delete simulator', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: '',
         exitCode: 0,
@@ -170,13 +173,14 @@ describe('simctl', () => {
 
       await deleteSimulator('TEST-UDID');
 
-      expect(mockExec).toHaveBeenCalledWith(
-        expect.stringContaining('delete TEST-UDID')
+      expect(mockExecFile).toHaveBeenCalledWith(
+        'xcrun',
+        ['simctl', 'delete', 'TEST-UDID']
       );
     });
 
     it('should throw error on failure', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: '',
         stderr: 'simulator not found',
         exitCode: 1,
@@ -188,7 +192,7 @@ describe('simctl', () => {
 
   describe('getSimulatorStatus', () => {
     it('should return simulator status', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: JSON.stringify({
           devices: {
             'iOS 17.0': [
@@ -205,7 +209,7 @@ describe('simctl', () => {
     });
 
     it('should throw error if simulator not found', async () => {
-      mockExec.mockResolvedValue({
+      mockExecFile.mockResolvedValue({
         stdout: JSON.stringify({ devices: {} }),
         stderr: '',
         exitCode: 0,

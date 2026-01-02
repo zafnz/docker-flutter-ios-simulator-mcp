@@ -1,4 +1,4 @@
-import { exec } from '../utils/exec.js';
+import { execFile } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
 import { readFileSync, mkdtempSync } from 'fs';
 import { join } from 'path';
@@ -36,7 +36,7 @@ export async function tap(udid: string, options: TapOptions): Promise<void> {
     args.push('--duration', String(options.duration));
   }
 
-  const { exitCode, stderr } = await exec(`idb ${args.join(' ')}`, { timeout: 10000 });
+  const { exitCode, stderr } = await execFile('idb', args, { timeout: 10000 });
 
   if (exitCode !== 0) {
     throw new Error(
@@ -54,11 +54,9 @@ export async function tap(udid: string, options: TapOptions): Promise<void> {
 export async function typeText(udid: string, text: string): Promise<void> {
   logger.debug('IDB text input', { udid, text });
 
-  // Escape single quotes in text
-  const escapedText = text.replace(/'/g, "'\\''");
-
-  const { exitCode, stderr } = await exec(
-    `idb ui text --udid ${udid} '${escapedText}'`,
+  const { exitCode, stderr } = await execFile(
+    'idb',
+    ['ui', 'text', '--udid', udid, text],
     { timeout: 10000 }
   );
 
@@ -93,7 +91,7 @@ export async function swipe(udid: string, options: SwipeOptions): Promise<void> 
     args.push('--duration', String(options.duration));
   }
 
-  const { exitCode, stderr } = await exec(`idb ${args.join(' ')}`, { timeout: 10000 });
+  const { exitCode, stderr } = await execFile('idb', args, { timeout: 10000 });
 
   if (exitCode !== 0) {
     throw new Error(
@@ -111,8 +109,9 @@ export async function swipe(udid: string, options: SwipeOptions): Promise<void> 
 export async function describeAll(udid: string): Promise<string> {
   logger.debug('IDB describe all', { udid });
 
-  const { stdout, stderr, exitCode } = await exec(
-    `idb ui describe-all --udid ${udid}`,
+  const { stdout, stderr, exitCode } = await execFile(
+    'idb',
+    ['ui', 'describe-all', '--udid', udid],
     { timeout: 15000 }
   );
 
@@ -133,8 +132,9 @@ export async function describeAll(udid: string): Promise<string> {
 export async function describePoint(udid: string, x: number, y: number): Promise<string> {
   logger.debug('IDB describe point', { udid, x, y });
 
-  const { stdout, stderr, exitCode } = await exec(
-    `idb ui describe-point --udid ${udid} ${String(x)} ${String(y)}`,
+  const { stdout, stderr, exitCode } = await execFile(
+    'idb',
+    ['ui', 'describe-point', '--udid', udid, String(x), String(y)],
     { timeout: 10000 }
   );
 
@@ -159,8 +159,9 @@ export async function screenshot(udid: string, outputPath?: string): Promise<Scr
   const tempDir = mkdtempSync(join(tmpdir(), 'mcp-screenshot-'));
   const tempPath = join(tempDir, 'screenshot.png');
 
-  const { exitCode, stderr } = await exec(
-    `idb screenshot --udid ${udid} "${tempPath}"`,
+  const { exitCode, stderr } = await execFile(
+    'idb',
+    ['screenshot', '--udid', udid, tempPath],
     { timeout: 15000 }
   );
 

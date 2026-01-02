@@ -1,8 +1,9 @@
-import { exec as nodeExec, spawn } from 'child_process';
+import { exec as nodeExec, execFile as nodeExecFile, spawn } from 'child_process';
 import { promisify } from 'util';
 import { logger } from './logger.js';
 
 const execAsync = promisify(nodeExec);
+const execFileAsync = promisify(nodeExecFile);
 
 export interface ExecResult {
   stdout: string;
@@ -27,6 +28,57 @@ export async function exec(
 
   try {
     const { stdout, stderr } = await execAsync(command, {
+      cwd,
+      timeout,
+      env: { ...process.env, ...env },
+      maxBuffer,
+    });
+
+    return {
+      stdout,
+      stderr,
+      exitCode: 0,
+    };
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error) {
+      const execError = error as {
+        stdout?: Buffer | string;
+        stderr?: Buffer | string;
+        code?: number;
+        signal?: string;
+      };
+
+      const stdout = typeof execError.stdout === 'string'
+        ? execError.stdout
+        : execError.stdout?.toString() ?? '';
+      const stderr = typeof execError.stderr === 'string'
+        ? execError.stderr
+        : execError.stderr?.toString() ?? '';
+
+      return {
+        stdout,
+        stderr,
+        exitCode: execError.code ?? 1,
+      };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Execute a file with arguments (safer than exec - no shell injection)
+ */
+export async function execFile(
+  command: string,
+  args: string[] = [],
+  options: ExecOptions = {}
+): Promise<ExecResult> {
+  const { cwd, timeout = 30000, env, maxBuffer = 10 * 1024 * 1024 } = options;
+
+  logger.debug('Executing file', { command, args, cwd });
+
+  try {
+    const { stdout, stderr } = await execFileAsync(command, args, {
       cwd,
       timeout,
       env: { ...process.env, ...env },

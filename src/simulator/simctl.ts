@@ -1,13 +1,11 @@
-import { exec } from '../utils/exec.js';
+import { execFile } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
 import { DeviceType, SimctlListOutput } from './types.js';
-
-const SIMCTL_PATH = 'xcrun simctl';
 
 export async function listDeviceTypes(): Promise<DeviceType[]> {
   logger.debug('Listing device types');
 
-  const result = await exec(`${SIMCTL_PATH} list devicetypes -j`);
+  const result = await execFile('xcrun', ['simctl', 'list', 'devicetypes', '-j']);
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to list device types: ${result.stderr}`);
@@ -48,8 +46,9 @@ export async function createSimulator(deviceType: string): Promise<string> {
 
   const simulatorName = `MCP-${String(Date.now())}`;
 
-  const result = await exec(
-    `${SIMCTL_PATH} create "${simulatorName}" "${deviceTypeId}"`,
+  const result = await execFile(
+    'xcrun',
+    ['simctl', 'create', simulatorName, deviceTypeId],
     { timeout: 30000 }
   );
 
@@ -70,7 +69,7 @@ export async function createSimulator(deviceType: string): Promise<string> {
 export async function bootSimulator(udid: string): Promise<void> {
   logger.info('Booting simulator', { udid });
 
-  const result = await exec(`${SIMCTL_PATH} boot ${udid}`, { timeout: 60000 });
+  const result = await execFile('xcrun', ['simctl', 'boot', udid], { timeout: 60000 });
 
   if (result.exitCode !== 0 && !result.stderr.includes('Unable to boot device in current state: Booted')) {
     throw new Error(
@@ -86,7 +85,7 @@ export async function bootSimulator(udid: string): Promise<void> {
 export async function shutdownSimulator(udid: string): Promise<void> {
   logger.info('Shutting down simulator', { udid });
 
-  const result = await exec(`${SIMCTL_PATH} shutdown ${udid}`);
+  const result = await execFile('xcrun', ['simctl', 'shutdown', udid]);
 
   if (result.exitCode !== 0 && !result.stderr.includes('Unable to shutdown device in current state: Shutdown')) {
     logger.warn('Failed to shutdown simulator', {
@@ -101,7 +100,7 @@ export async function shutdownSimulator(udid: string): Promise<void> {
 export async function deleteSimulator(udid: string): Promise<void> {
   logger.info('Deleting simulator', { udid });
 
-  const result = await exec(`${SIMCTL_PATH} delete ${udid}`);
+  const result = await execFile('xcrun', ['simctl', 'delete', udid]);
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to delete simulator: ${result.stderr}`);
@@ -111,7 +110,7 @@ export async function deleteSimulator(udid: string): Promise<void> {
 }
 
 export async function getSimulatorStatus(udid: string): Promise<string> {
-  const result = await exec(`${SIMCTL_PATH} list devices -j`);
+  const result = await execFile('xcrun', ['simctl', 'list', 'devices', '-j']);
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to list devices: ${result.stderr}`);
