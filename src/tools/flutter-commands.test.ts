@@ -5,6 +5,7 @@ import type { SpawnedProcess, ExecResult } from '../utils/exec.js';
 const mockGetSession = jest.fn<() => Session | undefined>();
 const mockGetPreBuildScript = jest.fn<() => string | undefined>();
 const mockGetPostBuildScript = jest.fn<() => string | undefined>();
+const mockUpdateSessionActivity = jest.fn<() => void>();
 const mockSpawnStreaming = jest.fn<() => SpawnedProcess>();
 const mockExec = jest.fn<() => Promise<ExecResult>>();
 const mockExecFile = jest.fn<() => Promise<ExecResult>>();
@@ -14,6 +15,7 @@ jest.unstable_mockModule('../session/manager.js', () => ({
     getSession: mockGetSession,
     getPreBuildScript: mockGetPreBuildScript,
     getPostBuildScript: mockGetPostBuildScript,
+    updateSessionActivity: mockUpdateSessionActivity,
   },
 }));
 
@@ -39,6 +41,7 @@ describe('Flutter Command Tools', () => {
     mockGetSession.mockClear();
     mockGetPreBuildScript.mockClear();
     mockGetPostBuildScript.mockClear();
+    mockUpdateSessionActivity.mockClear();
     mockSpawnStreaming.mockClear();
     mockExec.mockClear();
     mockExecFile.mockClear();
@@ -77,6 +80,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -108,6 +112,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -156,6 +161,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -253,6 +259,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -273,6 +280,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -304,6 +312,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -337,6 +346,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -368,6 +378,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -401,6 +412,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
@@ -432,6 +444,7 @@ describe('Flutter Command Tools', () => {
         simulatorUdid: 'UDID-123',
         deviceType: 'iPhone 16 Pro',
         createdAt: new Date(),
+        lastActivityAt: new Date(),
       };
 
       mockGetSession.mockReturnValue(session);
