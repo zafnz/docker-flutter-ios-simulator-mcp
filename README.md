@@ -16,30 +16,30 @@ Enables AI agents (like Claude) inside a Docker container to build, run, and int
 
 ## Architecture
 
-Enables AI agents running in Docker containers to control iOS Simulator on the macOS host:
+Enables AI agents running in Docker containers to control iOS Simulators on the macOS host:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         macOS Host                              │
 │                                                                 │
-│  ┌──────────────────┐         ┌─────────────────────────────┐  │
-│  │ iOS Simulator    │         │ docker-flutter-ios-         │  │
-│  │                  │◄────────┤ simulator-mcp               │  │
-│  │ ┌──────────────┐ │         │                             │  │
-│  │ │ Flutter App  │ │         │ • Session Management        │  │
-│  │ │              │ │         │ • Flutter Build/Run/Test    │  │
-│  │ └──────────────┘ │         │ • Hot Reload/Restart        │  │
-│  │                  │         │ • Screenshots (via IDB)     │  │
-│  │  Status: Booted  │         │ • UI Automation             │  │
-│  └──────────────────┘         │ • Log Streaming             │  │
-│                               └─────────────────────────────┘  │
+│  ┌──────────────────┐         ┌─────────────────────────────┐   │
+│  │ iOS Simulators   │         │ docker-flutter-ios-         │   │
+│  │ ┌─ Sim 1 ──────┐ │◄────────┤ simulator-mcp               │   │
+│  │ ┌─ Sim 2 ──────┐ │         │                             │   │
+│  │ │ Flutter App  │ │         │ • Session Management        │   │
+│  │ │              │ │         │ • Flutter Build/Run/Test    │   │
+│  │ └──────────────┘ │         │ • Hot Reload/Restart        │   │
+│  │                  │         │ • Screenshots (via IDB)     │   │
+│  │  Status: Booted  │         │ • UI Automation             │   │
+│  └──────────────────┘         │ • Log Streaming             │   │
+│                               └─────────────────────────────┘   │
 │                                         ▲                       │
 │                                         │ HTTP/MCP              │
 └─────────────────────────────────────────┼───────────────────────┘
                                           │
                     ┌─────────────────────┴──────────────────────┐
                     │                                            │
-          ┌─────────┴──────────┐              ┌─────────────────┴─┐
+          ┌─────────┴──────────┐              ┌──────────────────┴┐
           │  Docker Container  │              │ Docker Container  │
           │                    │              │                   │
           │  ┌──────────────┐  │              │ ┌───────────────┐ │
