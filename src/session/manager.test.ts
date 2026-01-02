@@ -375,15 +375,20 @@ describe('SessionManager Security', () => {
       }).not.toThrow();
     });
 
-    it('should configure timeout monitoring when sessionTimeout is set', () => {
+    it('should configure timeout monitoring when sessionTimeout is set', async () => {
       const manager = new SessionManager(testDir);
 
-      // Configure with a timeout
-      manager.configure(testDir, 10, undefined, undefined, undefined, 5);
+      try {
+        // Configure with a timeout
+        manager.configure(testDir, 10, undefined, undefined, undefined, 5);
 
-      // The timeout monitoring should be started (we can't easily test the interval directly)
-      // but we can verify it doesn't throw
-      expect(true).toBe(true);
+        // The timeout monitoring should be started (we can't easily test the interval directly)
+        // but we can verify it doesn't throw
+        expect(true).toBe(true);
+      } finally {
+        // Clean up the manager to stop any intervals
+        await manager.cleanup();
+      }
     });
 
     it('should clean up timeout monitoring interval on cleanup', async () => {
