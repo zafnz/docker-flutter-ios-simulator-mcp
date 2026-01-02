@@ -185,11 +185,13 @@ session_end({ sessionId: "abc-123" })
 flutter-ios-mcp [OPTIONS]
 
 OPTIONS:
-  -p, --port <port>            Port to listen on (default: 3000)
-      --host <host>            Host address to bind to (default: 127.0.0.1)
-      --allow-only <path>      Only allow Flutter projects under this path (default: /Users/)
-      --max-sessions <number>  Maximum number of concurrent sessions (default: 10)
-  -h, --help                   Show this help message
+  -p, --port <port>              Port to listen on (default: 3000)
+      --host <host>              Host address to bind to (default: 127.0.0.1)
+      --allow-only <path>        Only allow Flutter projects under this path (default: /Users/)
+      --max-sessions <number>    Maximum number of concurrent sessions (default: 10)
+      --pre-build-script <cmd>   Command to run before flutter build/run (e.g., "git pull")
+      --post-build-script <cmd>  Command to run after flutter build/run completes
+  -h, --help                     Show this help message
 ```
 
 ### Environment Variables
@@ -200,6 +202,8 @@ OPTIONS:
 | `HOST` | Server bind address (use `0.0.0.0` for Docker) | `127.0.0.1` |
 | `ALLOW_ONLY` | Path prefix for allowed Flutter projects | `/Users/` |
 | `MAX_SESSIONS` | Maximum number of concurrent sessions | `10` |
+| `PRE_BUILD_SCRIPT` | Command to run before flutter build/run | (none) |
+| `POST_BUILD_SCRIPT` | Command to run after flutter build/run | (none) |
 | `LOG_LEVEL` | Logging verbosity (`debug`, `info`, `warn`, `error`) | `info` |
 
 ### Examples
@@ -220,6 +224,12 @@ npx flutter-ios-mcp --allow-only /Users/alice/flutter-projects
 # Allow more concurrent sessions
 npx flutter-ios-mcp --max-sessions 20
 
+# Run git pull before each build
+npx flutter-ios-mcp --pre-build-script "git pull"
+
+# Run commands before and after builds
+npx flutter-ios-mcp --pre-build-script "git pull" --post-build-script "echo Build complete"
+
 # Multiple options
 npx flutter-ios-mcp --port 8080 --host 0.0.0.0 --allow-only /Users/alice --max-sessions 15
 ```
@@ -231,8 +241,6 @@ By default, the server:
 - Only allows Flutter projects under `/Users/` to prevent access to system directories
 - Validates all project paths have a `pubspec.yaml` file
 - Limits concurrent sessions to 10 to prevent resource exhaustion
-
-For Docker deployments, use `--host 0.0.0.0` to allow container access.
 
 ## Troubleshooting
 
