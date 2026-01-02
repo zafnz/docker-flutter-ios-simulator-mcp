@@ -9,6 +9,7 @@ interface CliArgs {
   port: number;
   host: string;
   help: boolean;
+  version: boolean;
   allowOnly: string;
   basePath?: string;
   maxSessions: number;
@@ -22,6 +23,7 @@ function parseArgs(): CliArgs {
   let port = parseInt(process.env.PORT || '3000', 10);
   let host = process.env.HOST || '127.0.0.1';
   let help = false;
+  let version = false;
   let allowOnly = process.env.ALLOW_ONLY || '/Users/';
   let basePath: string | undefined = process.env.BASE_PATH;
   let maxSessions = parseInt(process.env.MAX_SESSIONS || '10', 10);
@@ -36,6 +38,8 @@ function parseArgs(): CliArgs {
 
     if (arg === '--help' || arg === '-h') {
       help = true;
+    } else if (arg === '--version' || arg === '-v') {
+      version = true;
     } else if (arg === '--port' || arg === '-p') {
       const portValue = args[++i];
       if (!portValue || isNaN(parseInt(portValue, 10))) {
@@ -107,7 +111,7 @@ function parseArgs(): CliArgs {
     }
   }
 
-  return { port, host, help, allowOnly, basePath, maxSessions, sessionTimeout, preBuildScript, postBuildScript };
+  return { port, host, help, version, allowOnly, basePath, maxSessions, sessionTimeout, preBuildScript, postBuildScript };
 }
 
 function showHelp(): void {
@@ -127,6 +131,7 @@ OPTIONS:
       --pre-build-script <cmd>   Command to run before flutter build/run (e.g., "git pull")
       --post-build-script <cmd>  Command to run after flutter build/run completes
   -h, --help                     Show this help message
+  -v, --version                  Show version information
 
 ENVIRONMENT VARIABLES:
   PORT                      Port to listen on (overridden by --port)
@@ -158,11 +163,20 @@ For more information, visit: https://github.com/zafnz/docker-flutter-ios-simulat
 `);
 }
 
+function showVersion(): void {
+  console.log('docker-flutter-ios-simulator-mcp version 0.1.1');
+}
+
 async function main(): Promise<void> {
-  const { port, host, help, allowOnly, basePath, maxSessions, sessionTimeout, preBuildScript, postBuildScript } = parseArgs();
+  const { port, host, help, version, allowOnly, basePath, maxSessions, sessionTimeout, preBuildScript, postBuildScript } = parseArgs();
 
   if (help) {
     showHelp();
+    process.exit(0);
+  }
+
+  if (version) {
+    showVersion();
     process.exit(0);
   }
 
