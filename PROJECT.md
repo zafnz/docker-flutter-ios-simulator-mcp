@@ -4,12 +4,12 @@ A Model Context Protocol (MCP) server that provides Flutter iOS development tool
 
 ## Project Overview
 
-This MCP server bridges Docker-containerized AI agents with the Flutter/iOS toolchain running on macOS. It provides session-based isolation so multiple agents can work concurrently on different git worktrees, each with their own iOS Simulator instance.
+This MCP server bridges Docker-containerized AI agents with the Flutter/iOS toolchain running on macOS. It provides session-based isolation so multiple agents can work concurrently on different Flutter projects, each with their own iOS Simulator instance.
 
 ### Key Features
 
 - **Session-based isolation**: Each agent gets its own simulator and flutter process
-- **Git worktree support**: Concurrent agents work on separate worktrees of the same repo
+- **Concurrent sessions**: Multiple agents can work on different Flutter projects simultaneously
 - **Log buffering & polling**: Flutter logs buffered in memory, retrieved via cursor-based pagination
 - **Hot reload/restart**: Interactive development workflow support
 - **Simulator UI control**: Tap, swipe, type, screenshot via Facebook IDB
@@ -28,7 +28,7 @@ This MCP server bridges Docker-containerized AI agents with the Flutter/iOS tool
 │  │  Sessions:                                          │    │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐             │    │
 │  │  │ agent-1  │ │ agent-2  │ │ agent-N  │             │    │
-│  │  │ worktree │ │ worktree │ │ worktree │             │    │
+│  │  │ project  │ │ project  │ │ project  │             │    │
 │  │  │ sim UDID │ │ sim UDID │ │ sim UDID │             │    │
 │  │  │ flutter  │ │ flutter  │ │ flutter  │             │    │
 │  │  │ process  │ │ process  │ │ process  │             │    │
@@ -40,9 +40,9 @@ This MCP server bridges Docker-containerized AI agents with the Flutter/iOS tool
 │    Simulator 1     Simulator 2      Simulator N             │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │    /shared/project (git repo with worktrees)        │    │
-│  │    /shared/agent-1  (worktree)                      │    │
-│  │    /shared/agent-2  (worktree)                      │    │
+│  │    /path/to/project-1  (Flutter project)            │    │
+│  │    /path/to/project-2  (Flutter project)            │    │
+│  │    /path/to/project-3  (Flutter project)            │    │
 │  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                           ▲
@@ -107,7 +107,7 @@ flutter-ios-mcp/
 
 | Tool | Description |
 |------|-------------|
-| `session_start` | Create session with worktree path, boot new simulator. Returns session_id + UDID |
+| `session_start` | Create session with Flutter project path, boot new simulator. Returns session_id + UDID |
 | `session_end` | Stop flutter process, shutdown and delete simulator |
 | `session_list` | List all active sessions with state |
 
@@ -185,8 +185,10 @@ flutter-ios-mcp/
 ### Phase 5: Polish & Documentation
 - [x] Comprehensive error handling (timeouts, better error messages)
 - [x] Graceful shutdown (cleanup all sessions)
-- [x] Input validation (worktree path exists)
-- [ ] README with setup instructions
+- [x] Input validation (project path exists)
+- [x] README with setup instructions
+- [x] MIT License
+- [x] CLI arguments (--port, --host, --help)
 - [ ] Docker connectivity testing guide
 
 ## Future Enhancements
@@ -209,8 +211,8 @@ flutter-ios-mcp/
 
 ### Session Lifecycle
 - No session pooling or cleanup timers - simple create/destroy model
-- Each session creates a fresh simulator via `simctl clone` or `simctl create`
-- Session ID is a UUID, maps to worktree path + simulator UDID + flutter process
+- Each session creates a fresh simulator via `simctl create`
+- Session ID is a UUID, maps to project path + simulator UDID + flutter process
 
 ### Log Streaming
 - MCP tool responses cannot natively stream (they return complete text content)
@@ -259,8 +261,7 @@ flutter-ios-mcp/
 - Node.js 18+
 - Xcode with iOS Simulators installed
 - Flutter SDK in PATH
-- Facebook IDB installed (`brew install idb-companion`)
-- Git (for worktree support)
+- Facebook IDB installed (see README for installation instructions)
 
 ## Environment Variables
 
@@ -290,31 +291,31 @@ Configure MCP client to connect to `http://host.docker.internal:3000/mcp`
 ### Example Agent Workflow
 
 ```
-1. session_start({ worktree_path: "/shared/agent-1", device_type: "iPhone 16 Pro" })
-   → { session_id: "abc-123", simulator_udid: "XXXX-YYYY" }
+1. session_start({ worktreePath: "/path/to/my-flutter-app", deviceType: "iPhone 16 Pro" })
+   → { sessionId: "abc-123", simulatorUdid: "XXXX-YYYY" }
 
-2. flutter_pub_get({ session_id: "abc-123" })
+2. flutter_run({ sessionId: "abc-123" })
+   → { success: true, pid: 12345, message: "Flutter process started" }
+
+3. flutter_logs({ sessionId: "abc-123", fromIndex: 0, limit: 100 })
+   → { logs: [...], nextIndex: 100, hasMore: true }
+
+4. [Agent edits code in project]
+
+5. flutter_hot_reload({ sessionId: "abc-123" })
+   → { success: true, message: "Hot reload complete" }
+
+6. screenshot({ sessionId: "abc-123" })
+   → Returns PNG image directly in MCP response
+
+7. ui_tap({ sessionId: "abc-123", x: 195, y: 400 })
    → { success: true }
 
-3. flutter_run({ session_id: "abc-123" })
-   → SSE stream of flutter logs...
-   
-4. [Agent edits code in worktree]
-
-5. flutter_hot_reload({ session_id: "abc-123" })
-   → { success: true, message: "Reloaded 1 of 423 libraries" }
-
-6. ui_view({ session_id: "abc-123" })
-   → { image: "base64...", width: 390, height: 844 }
-
-7. ui_tap({ session_id: "abc-123", x: 195, y: 400 })
+8. flutter_stop({ sessionId: "abc-123" })
    → { success: true }
 
-8. flutter_stop({ session_id: "abc-123" })
-   → { success: true }
-
-9. session_end({ session_id: "abc-123" })
-   → { success: true }
+9. session_end({ sessionId: "abc-123" })
+   → { success: true, message: "Session abc-123 ended successfully" }
 ```
 
 ## References
