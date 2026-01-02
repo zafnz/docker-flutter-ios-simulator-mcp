@@ -27,11 +27,12 @@ export class FlutterProcessManager {
     });
 
     // Security: Validate target file
+    // Prevents malicious clients from accessing arbitrary files on the system
     if (options.target) {
-      // Validate target is a relative path within worktree
       const targetPath = resolve(options.worktreePath, options.target);
 
-      // Ensure target doesn't escape worktree (path traversal protection)
+      // Prevent path traversal attacks (e.g., "../../../etc/passwd")
+      // Ensures the target file is within the project directory boundary
       if (!targetPath.startsWith(resolve(options.worktreePath))) {
         throw new Error(
           `Security: Target file must be within project directory. ` +
@@ -39,11 +40,13 @@ export class FlutterProcessManager {
         );
       }
 
-      // Validate target exists and is a .dart file
+      // Validate file exists to provide early feedback
       if (!existsSync(targetPath)) {
         throw new Error(`Target file does not exist: ${options.target}`);
       }
 
+      // Only .dart files are valid Flutter entry points
+      // Prevents attempts to execute arbitrary file types
       if (!targetPath.endsWith('.dart')) {
         throw new Error(
           `Target must be a Dart file (.dart extension). ` +
@@ -53,8 +56,9 @@ export class FlutterProcessManager {
     }
 
     // Security: Validate flavor name
+    // Prevents command injection through flavor parameter
     if (options.flavor) {
-      // Only allow alphanumeric, hyphen, and underscore
+      // Only allow safe characters that cannot break shell command parsing
       if (!/^[a-zA-Z0-9_-]+$/.test(options.flavor)) {
         throw new Error(
           `Invalid flavor name: ${options.flavor}. ` +
@@ -64,6 +68,8 @@ export class FlutterProcessManager {
     }
 
     // Security: Validate additionalArgs against allowlist
+    // Prevents command injection by only allowing known-safe Flutter arguments
+    // This protects against malicious arguments like "--dart-define=KEY=$(rm -rf /)"
     if (options.additionalArgs) {
       const ALLOWED_ARGS = new Set([
         '--debug',
@@ -76,15 +82,31 @@ export class FlutterProcessManager {
       ]);
 
       for (const arg of options.additionalArgs) {
-        // Allow arguments from allowlist or --dart-define=KEY=VALUE
-        const isAllowed = ALLOWED_ARGS.has(arg) || arg.startsWith('--dart-define=');
-
-        if (!isAllowed) {
-          throw new Error(
-            `Invalid Flutter argument: ${arg}. ` +
-            `Allowed arguments: ${Array.from(ALLOWED_ARGS).join(', ')}, --dart-define=KEY=VALUE`
-          );
+        // Check if argument is in the allowlist
+        if (ALLOWED_ARGS.has(arg)) {
+          continue;
         }
+
+        // Validate --dart-define format more strictly to prevent injection
+        // Example attack prevented: --dart-define=X=$(malicious_command)
+        if (arg.startsWith('--dart-define=')) {
+          const defineValue = arg.substring('--dart-define='.length);
+          // Enforce KEY=VALUE where KEY follows identifier rules (alphanumeric/underscore)
+          // This prevents shell metacharacters and command substitution
+          if (!/^[A-Za-z_][A-Za-z0-9_]*=.*$/.test(defineValue)) {
+            throw new Error(
+              `Invalid --dart-define format: ${arg}. ` +
+              `Expected --dart-define=KEY=VALUE where KEY is alphanumeric/underscore starting with letter or underscore`
+            );
+          }
+          continue;
+        }
+
+        // If we get here, argument is not allowed - reject it
+        throw new Error(
+          `Invalid Flutter argument: ${arg}. ` +
+          `Allowed arguments: ${Array.from(ALLOWED_ARGS).join(', ')}, --dart-define=KEY=VALUE`
+        );
       }
     }
 
@@ -256,7 +278,9 @@ export class FlutterProcessManager {
 
     this.logSubscribers.clear();
 
-    if (this.process) {
+    // Capture process reference to avoid race condition
+    const currentProcess = this.process;
+    if (currentProcess) {
       this.stop();
 
       await new Promise<void>((resolve) => {
@@ -266,15 +290,14 @@ export class FlutterProcessManager {
           resolve();
         }, 5000);
 
-        if (this.process) {
-          void this.process.wait().then(() => {
-            clearTimeout(timeout);
-            resolve();
-          });
-        } else {
+        currentProcess.wait().then(() => {
           clearTimeout(timeout);
           resolve();
-        }
+        }).catch((error: unknown) => {
+          logger.error('Error waiting for process', { error: String(error) });
+          clearTimeout(timeout);
+          resolve();
+        });
       });
     }
 

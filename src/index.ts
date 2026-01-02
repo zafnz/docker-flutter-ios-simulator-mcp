@@ -9,6 +9,7 @@ interface CliArgs {
   host: string;
   help: boolean;
   allowOnly: string;
+  maxSessions: number;
 }
 
 function parseArgs(): CliArgs {
@@ -17,6 +18,7 @@ function parseArgs(): CliArgs {
   let host = process.env.HOST || '127.0.0.1';
   let help = false;
   let allowOnly = process.env.ALLOW_ONLY || '/Users/';
+  let maxSessions = parseInt(process.env.MAX_SESSIONS || '10', 10);
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -44,6 +46,17 @@ function parseArgs(): CliArgs {
         process.exit(1);
       }
       allowOnly = pathValue;
+    } else if (arg === '--max-sessions') {
+      const maxValue = args[++i];
+      if (!maxValue || isNaN(parseInt(maxValue, 10))) {
+        console.error('Error: --max-sessions requires a numeric value');
+        process.exit(1);
+      }
+      maxSessions = parseInt(maxValue, 10);
+      if (maxSessions < 1) {
+        console.error('Error: --max-sessions must be at least 1');
+        process.exit(1);
+      }
     } else {
       console.error(`Error: Unknown argument: ${arg}`);
       console.error('Use --help to see available options');
@@ -51,7 +64,7 @@ function parseArgs(): CliArgs {
     }
   }
 
-  return { port, host, help, allowOnly };
+  return { port, host, help, allowOnly, maxSessions };
 }
 
 function showHelp(): void {
@@ -62,15 +75,17 @@ USAGE:
   flutter-ios-mcp [OPTIONS]
 
 OPTIONS:
-  -p, --port <port>         Port to listen on (default: 3000)
-      --host <host>         Host address to bind to (default: 127.0.0.1)
-      --allow-only <path>   Only allow Flutter projects under this path (default: /Users/)
-  -h, --help                Show this help message
+  -p, --port <port>            Port to listen on (default: 3000)
+      --host <host>            Host address to bind to (default: 127.0.0.1)
+      --allow-only <path>      Only allow Flutter projects under this path (default: /Users/)
+      --max-sessions <number>  Maximum number of concurrent sessions (default: 10)
+  -h, --help                   Show this help message
 
 ENVIRONMENT VARIABLES:
   PORT                      Port to listen on (overridden by --port)
   HOST                      Host address to bind to (overridden by --host)
   ALLOW_ONLY                Path prefix for allowed projects (overridden by --allow-only)
+  MAX_SESSIONS              Maximum concurrent sessions (overridden by --max-sessions)
   LOG_LEVEL                 Logging level (debug, info, warn, error)
 
 EXAMPLES:
@@ -78,6 +93,7 @@ EXAMPLES:
   flutter-ios-mcp --port 8080
   flutter-ios-mcp --port 3000 --host localhost
   flutter-ios-mcp --allow-only /Users/alice/projects
+  flutter-ios-mcp --max-sessions 20
   PORT=8080 flutter-ios-mcp
 
 SECURITY:
@@ -89,15 +105,15 @@ For more information, visit: https://github.com/yourusername/flutter-ios-mcp
 }
 
 async function main(): Promise<void> {
-  const { port, host, help, allowOnly } = parseArgs();
+  const { port, host, help, allowOnly, maxSessions } = parseArgs();
 
   if (help) {
     showHelp();
     process.exit(0);
   }
 
-  // Configure session manager with allowed path prefix
-  sessionManager.configure(allowOnly);
+  // Configure session manager with allowed path prefix and session limit
+  sessionManager.configure(allowOnly, maxSessions);
 
   const PORT = port;
   const HOST = host;
@@ -106,6 +122,16 @@ async function main(): Promise<void> {
   // Middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Error handling middleware for JSON parse errors
+  app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction): void => {
+    if (err instanceof SyntaxError && 'body' in err) {
+      logger.warn('Invalid JSON in request', { error: err.message, path: req.path });
+      res.status(400).json({ error: 'Invalid JSON in request body' });
+      return;
+    }
+    next(err);
+  });
 
   const mcpServer = createMCPServer();
   const transport = setupTransport(app);
@@ -137,20 +163,39 @@ async function main(): Promise<void> {
   const shutdown = async (): Promise<void> => {
     logger.info('Shutting down server');
 
-    await sessionManager.cleanup();
-    await transport.close();
-
-    server.close(() => {
-      logger.info('Server closed');
+    // Forcefully exit after timeout to prevent hanging
+    const forceExitTimeout = setTimeout(() => {
+      logger.warn('Forced shutdown after timeout');
       process.exit(0);
-    });
+    }, 10000);
+
+    try {
+      await sessionManager.cleanup();
+      await transport.close();
+
+      server.close(() => {
+        clearTimeout(forceExitTimeout);
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    } catch (error) {
+      logger.error('Error during shutdown', { error: String(error) });
+      clearTimeout(forceExitTimeout);
+      process.exit(1);
+    }
   };
 
   process.on('SIGTERM', () => {
-    void shutdown();
+    shutdown().catch((error: unknown) => {
+      logger.error('Fatal error during shutdown', { error: String(error) });
+      process.exit(1);
+    });
   });
   process.on('SIGINT', () => {
-    void shutdown();
+    shutdown().catch((error: unknown) => {
+      logger.error('Fatal error during shutdown', { error: String(error) });
+      process.exit(1);
+    });
   });
 }
 

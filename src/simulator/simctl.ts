@@ -11,7 +11,16 @@ export async function listDeviceTypes(): Promise<DeviceType[]> {
     throw new Error(`Failed to list device types: ${result.stderr}`);
   }
 
-  const output = JSON.parse(result.stdout) as SimctlListOutput;
+  let output: SimctlListOutput;
+  try {
+    output = JSON.parse(result.stdout) as SimctlListOutput;
+  } catch (error) {
+    throw new Error(
+      `Failed to parse simctl output: ${error instanceof Error ? error.message : String(error)}. ` +
+      `Output preview: ${result.stdout.substring(0, 200)}`
+    );
+  }
+
   const deviceTypes = output.devicetypes || [];
 
   const iPhoneTypes = deviceTypes.filter((dt) =>
@@ -116,7 +125,16 @@ export async function getSimulatorStatus(udid: string): Promise<string> {
     throw new Error(`Failed to list devices: ${result.stderr}`);
   }
 
-  const output = JSON.parse(result.stdout) as SimctlListOutput;
+  let output: SimctlListOutput;
+  try {
+    output = JSON.parse(result.stdout) as SimctlListOutput;
+  } catch (error) {
+    throw new Error(
+      `Failed to parse simctl devices output: ${error instanceof Error ? error.message : String(error)}. ` +
+      `Output preview: ${result.stdout.substring(0, 200)}`
+    );
+  }
+
   const devices = output.devices || {};
 
   for (const runtime of Object.keys(devices)) {

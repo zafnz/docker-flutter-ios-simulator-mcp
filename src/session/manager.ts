@@ -8,20 +8,69 @@ import { createSimulator, bootSimulator, shutdownSimulator, deleteSimulator } fr
 
 export class SessionManager {
   private allowedPathPrefix: string;
+  private maxSessions: number;
 
-  constructor(allowedPathPrefix = '/Users/') {
+  constructor(allowedPathPrefix = '/Users/', maxSessions = 10) {
     this.allowedPathPrefix = allowedPathPrefix;
+    this.maxSessions = maxSessions;
   }
 
-  configure(allowedPathPrefix: string): void {
+  /**
+   * Configure the session manager with security settings.
+   *
+   * @param allowedPathPrefix - Absolute path prefix for allowed Flutter projects (e.g., "/Users/")
+   * @param maxSessions - Optional maximum number of concurrent sessions
+   *
+   * @example
+   * sessionManager.configure('/Users/alice/projects', 20);
+   */
+  configure(allowedPathPrefix: string, maxSessions?: number): void {
     this.allowedPathPrefix = allowedPathPrefix;
-    logger.info('SessionManager configured', { allowedPathPrefix });
+    if (maxSessions !== undefined) {
+      this.maxSessions = maxSessions;
+      logger.info('SessionManager configured', { allowedPathPrefix, maxSessions });
+    } else {
+      logger.info('SessionManager configured', { allowedPathPrefix });
+    }
   }
 
+  /**
+   * Create a new development session with an iOS Simulator.
+   *
+   * Creates a fresh iOS Simulator, boots it, and associates it with the Flutter project directory.
+   * Validates that the project path is within allowed directories and contains a valid Flutter project.
+   *
+   * @param params - Session creation parameters
+   * @param params.worktreePath - Absolute path to Flutter project directory (must contain pubspec.yaml)
+   * @param params.deviceType - iOS device type to simulate (default: "iPhone 16 Pro")
+   *
+   * @returns Session information including unique ID and simulator UDID
+   *
+   * @throws {Error} If session limit is reached
+   * @throws {Error} If path is outside allowed prefix
+   * @throws {Error} If project directory doesn't exist or isn't valid
+   * @throws {Error} If simulator creation or boot fails
+   *
+   * @example
+   * const session = await sessionManager.createSession({
+   *   worktreePath: '/Users/alice/my-flutter-app',
+   *   deviceType: 'iPhone 16 Pro'
+   * });
+   * // Returns: { id: 'uuid...', worktreePath: '...', simulatorUdid: '...', deviceType: '...' }
+   */
   async createSession(params: CreateSessionParams): Promise<SessionInfo> {
     const { worktreePath, deviceType = 'iPhone 16 Pro' } = params;
 
     logger.info('Creating session', { worktreePath, deviceType });
+
+    // Check session limit
+    if (sessionState.size() >= this.maxSessions) {
+      throw new Error(
+        `Maximum number of sessions (${String(this.maxSessions)}) reached. ` +
+        `End an existing session before creating a new one. ` +
+        `Active sessions: ${String(sessionState.size())}`
+      );
+    }
 
     // Validate project path exists and is a directory
     const resolvedPath = resolve(worktreePath);
@@ -131,10 +180,21 @@ export class SessionManager {
     logger.info('Session ended', { sessionId });
   }
 
+  /**
+   * List all active sessions.
+   *
+   * @returns Array of session information for all active sessions
+   */
   listSessions(): SessionInfo[] {
     return sessionState.list();
   }
 
+  /**
+   * Get detailed information about a specific session.
+   *
+   * @param sessionId - Unique session identifier from createSession()
+   * @returns Session object with full state, or undefined if not found
+   */
   getSession(sessionId: string): Session | undefined {
     return sessionState.get(sessionId);
   }

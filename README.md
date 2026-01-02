@@ -182,10 +182,11 @@ session_end({ sessionId: "abc-123" })
 flutter-ios-mcp [OPTIONS]
 
 OPTIONS:
-  -p, --port <port>         Port to listen on (default: 3000)
-      --host <host>         Host address to bind to (default: 127.0.0.1)
-      --allow-only <path>   Only allow Flutter projects under this path (default: /Users/)
-  -h, --help                Show this help message
+  -p, --port <port>            Port to listen on (default: 3000)
+      --host <host>            Host address to bind to (default: 127.0.0.1)
+      --allow-only <path>      Only allow Flutter projects under this path (default: /Users/)
+      --max-sessions <number>  Maximum number of concurrent sessions (default: 10)
+  -h, --help                   Show this help message
 ```
 
 ### Environment Variables
@@ -195,6 +196,7 @@ OPTIONS:
 | `PORT` | HTTP server port | `3000` |
 | `HOST` | Server bind address (use `0.0.0.0` for Docker) | `127.0.0.1` |
 | `ALLOW_ONLY` | Path prefix for allowed Flutter projects | `/Users/` |
+| `MAX_SESSIONS` | Maximum number of concurrent sessions | `10` |
 | `LOG_LEVEL` | Logging verbosity (`debug`, `info`, `warn`, `error`) | `info` |
 
 ### Examples
@@ -212,8 +214,11 @@ npx flutter-ios-mcp --host 0.0.0.0
 # Restrict to specific directory
 npx flutter-ios-mcp --allow-only /Users/alice/flutter-projects
 
+# Allow more concurrent sessions
+npx flutter-ios-mcp --max-sessions 20
+
 # Multiple options
-npx flutter-ios-mcp --port 8080 --host 0.0.0.0 --allow-only /Users/alice
+npx flutter-ios-mcp --port 8080 --host 0.0.0.0 --allow-only /Users/alice --max-sessions 15
 ```
 
 ### Security
@@ -222,6 +227,7 @@ By default, the server:
 - Binds to `127.0.0.1` (localhost only) for security
 - Only allows Flutter projects under `/Users/` to prevent access to system directories
 - Validates all project paths have a `pubspec.yaml` file
+- Limits concurrent sessions to 10 to prevent resource exhaustion
 
 For Docker deployments, use `--host 0.0.0.0` to allow container access.
 

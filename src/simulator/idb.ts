@@ -1,6 +1,6 @@
 import { execFile } from '../utils/exec.js';
 import { logger } from '../utils/logger.js';
-import { readFileSync, mkdtempSync } from 'fs';
+import { readFileSync, mkdtempSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -159,32 +159,45 @@ export async function screenshot(udid: string): Promise<ScreenshotResult> {
   const tempDir = mkdtempSync(join(tmpdir(), 'mcp-screenshot-'));
   const tempPath = join(tempDir, 'screenshot.png');
 
-  const { exitCode, stderr } = await execFile(
-    'idb',
-    ['screenshot', '--udid', udid, tempPath],
-    { timeout: 15000 }
-  );
-
-  if (exitCode !== 0) {
-    throw new Error(
-      `Failed to take screenshot on simulator ${udid}: ${stderr}. ` +
-      'Ensure the simulator is booted.'
+  try {
+    const { exitCode, stderr } = await execFile(
+      'idb',
+      ['screenshot', '--udid', udid, tempPath],
+      { timeout: 15000 }
     );
+
+    if (exitCode !== 0) {
+      throw new Error(
+        `Failed to take screenshot on simulator ${udid}: ${stderr}. ` +
+        'Ensure the simulator is booted.'
+      );
+    }
+
+    // Read screenshot and encode as base64
+    const imageBuffer = readFileSync(tempPath);
+    const imageData = imageBuffer.toString('base64');
+
+    logger.info('Screenshot captured', {
+      udid,
+      tempPath,
+      sizeBytes: imageBuffer.length
+    });
+
+    return {
+      path: tempPath,
+      imageData,
+      format: 'png'
+    };
+  } finally {
+    // Clean up temp directory
+    try {
+      rmSync(tempDir, { recursive: true, force: true });
+      logger.debug('Cleaned up screenshot temp directory', { tempDir });
+    } catch (error) {
+      logger.warn('Failed to cleanup screenshot temp directory', {
+        tempDir,
+        error: String(error)
+      });
+    }
   }
-
-  // Read screenshot and encode as base64
-  const imageBuffer = readFileSync(tempPath);
-  const imageData = imageBuffer.toString('base64');
-
-  logger.info('Screenshot captured', {
-    udid,
-    tempPath,
-    sizeBytes: imageBuffer.length
-  });
-
-  return {
-    path: tempPath,
-    imageData,
-    format: 'png'
-  };
 }

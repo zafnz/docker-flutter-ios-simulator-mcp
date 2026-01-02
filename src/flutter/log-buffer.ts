@@ -24,6 +24,16 @@ export class LogBuffer {
   }
 
   getLogs(fromIndex?: number, limit = 100): LogEntry[] {
+    // Validate fromIndex is non-negative
+    if (fromIndex !== undefined && fromIndex < 0) {
+      throw new Error(`fromIndex must be non-negative, got: ${String(fromIndex)}`);
+    }
+
+    // Validate limit is positive
+    if (limit <= 0) {
+      throw new Error(`limit must be positive, got: ${String(limit)}`);
+    }
+
     let filtered = this.logs;
 
     if (fromIndex !== undefined) {
