@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-01-02
+
 ### Added
 - Initial release of flutter-ios-mcp
 - MCP server with HTTP transport for Flutter iOS development
@@ -47,12 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test suite (83 tests)
 - Complete documentation (README, CLAUDE.md, PROJECT.md)
 
-## [0.1.0] - YYYY-MM-DD (Not Published Yet)
-
-### Added
-- Initial development version
-- Core functionality implemented
-- Ready for npm publishing
 
 [Unreleased]: https://github.com/zafnz/flutter-ios-mcp/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/zafnz/flutter-ios-mcp/releases/tag/v0.1.0
