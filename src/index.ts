@@ -164,7 +164,7 @@ For more information, visit: https://github.com/zafnz/docker-flutter-ios-simulat
 }
 
 function showVersion(): void {
-  console.log('docker-flutter-ios-simulator-mcp version 0.1.1');
+  console.log('docker-flutter-ios-simulator-mcp version 0.1.2');
 }
 
 async function main(): Promise<void> {

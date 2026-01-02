@@ -1,6 +1,6 @@
 {
   "name": "docker-flutter-ios-simulator-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server providing Flutter iOS development tooling for AI agents",
   "main": "dist/index.js",
   "type": "module",
