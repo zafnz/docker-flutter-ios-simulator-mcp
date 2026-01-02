@@ -1,12 +1,23 @@
 import { v4 as uuidv4 } from 'uuid';
 import { existsSync, statSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import { sessionState } from './state.js';
 import { CreateSessionParams, Session, SessionInfo } from './types.js';
 import { logger } from '../utils/logger.js';
 import { createSimulator, bootSimulator, shutdownSimulator, deleteSimulator } from '../simulator/simctl.js';
 
 export class SessionManager {
+  private allowedPathPrefix: string;
+
+  constructor(allowedPathPrefix = '/Users/') {
+    this.allowedPathPrefix = allowedPathPrefix;
+  }
+
+  configure(allowedPathPrefix: string): void {
+    this.allowedPathPrefix = allowedPathPrefix;
+    logger.info('SessionManager configured', { allowedPathPrefix });
+  }
+
   async createSession(params: CreateSessionParams): Promise<SessionInfo> {
     const { worktreePath, deviceType = 'iPhone 16 Pro' } = params;
 
@@ -14,6 +25,15 @@ export class SessionManager {
 
     // Validate project path exists and is a directory
     const resolvedPath = resolve(worktreePath);
+
+    // Security: Validate path is within allowed prefix
+    if (!resolvedPath.startsWith(this.allowedPathPrefix)) {
+      throw new Error(
+        `Access denied: Project path must be under ${this.allowedPathPrefix}. ` +
+        `Provided path: ${resolvedPath}`
+      );
+    }
+
     if (!existsSync(resolvedPath)) {
       throw new Error(
         `Flutter project directory does not exist: ${worktreePath}. ` +
@@ -26,6 +46,15 @@ export class SessionManager {
       throw new Error(
         `Path is not a directory: ${worktreePath}. ` +
         'Provide a path to a directory containing a Flutter project (with pubspec.yaml).'
+      );
+    }
+
+    // Security: Validate it's a Flutter project by checking for pubspec.yaml
+    const pubspecPath = join(resolvedPath, 'pubspec.yaml');
+    if (!existsSync(pubspecPath)) {
+      throw new Error(
+        `Not a valid Flutter project (missing pubspec.yaml): ${resolvedPath}. ` +
+        'The directory must contain a pubspec.yaml file.'
       );
     }
 

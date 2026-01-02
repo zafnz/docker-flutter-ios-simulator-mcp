@@ -8,6 +8,7 @@ interface CliArgs {
   port: number;
   host: string;
   help: boolean;
+  allowOnly: string;
 }
 
 function parseArgs(): CliArgs {
@@ -15,6 +16,7 @@ function parseArgs(): CliArgs {
   let port = parseInt(process.env.PORT || '3000', 10);
   let host = process.env.HOST || '0.0.0.0';
   let help = false;
+  let allowOnly = process.env.ALLOW_ONLY || '/Users/';
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -35,6 +37,13 @@ function parseArgs(): CliArgs {
         process.exit(1);
       }
       host = hostValue;
+    } else if (arg === '--allow-only') {
+      const pathValue = args[++i];
+      if (!pathValue) {
+        console.error('Error: --allow-only requires a path value');
+        process.exit(1);
+      }
+      allowOnly = pathValue;
     } else {
       console.error(`Error: Unknown argument: ${arg}`);
       console.error('Use --help to see available options');
@@ -42,7 +51,7 @@ function parseArgs(): CliArgs {
     }
   }
 
-  return { port, host, help };
+  return { port, host, help, allowOnly };
 }
 
 function showHelp(): void {
@@ -53,32 +62,42 @@ USAGE:
   flutter-ios-mcp [OPTIONS]
 
 OPTIONS:
-  -p, --port <port>    Port to listen on (default: 3000)
-      --host <host>    Host address to bind to (default: 0.0.0.0)
-  -h, --help           Show this help message
+  -p, --port <port>         Port to listen on (default: 3000)
+      --host <host>         Host address to bind to (default: 0.0.0.0)
+      --allow-only <path>   Only allow Flutter projects under this path (default: /Users/)
+  -h, --help                Show this help message
 
 ENVIRONMENT VARIABLES:
-  PORT                 Port to listen on (overridden by --port)
-  HOST                 Host address to bind to (overridden by --host)
-  LOG_LEVEL            Logging level (debug, info, warn, error)
+  PORT                      Port to listen on (overridden by --port)
+  HOST                      Host address to bind to (overridden by --host)
+  ALLOW_ONLY                Path prefix for allowed projects (overridden by --allow-only)
+  LOG_LEVEL                 Logging level (debug, info, warn, error)
 
 EXAMPLES:
   flutter-ios-mcp
   flutter-ios-mcp --port 8080
   flutter-ios-mcp --port 3000 --host localhost
+  flutter-ios-mcp --allow-only /Users/alice/projects
   PORT=8080 flutter-ios-mcp
+
+SECURITY:
+  By default, only Flutter projects under /Users/ are allowed to prevent
+  malicious MCP clients from accessing system directories like /etc/, /usr/, etc.
 
 For more information, visit: https://github.com/yourusername/flutter-ios-mcp
 `);
 }
 
 async function main(): Promise<void> {
-  const { port, host, help } = parseArgs();
+  const { port, host, help, allowOnly } = parseArgs();
 
   if (help) {
     showHelp();
     process.exit(0);
   }
+
+  // Configure session manager with allowed path prefix
+  sessionManager.configure(allowOnly);
 
   const PORT = port;
   const HOST = host;
