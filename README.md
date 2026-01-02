@@ -32,6 +32,8 @@ Enables AI agents (like Claude) to build, run, and interact with Flutter iOS app
 3. **Node.js 18+** - [Install Node.js](https://nodejs.org/)
 
 4. **Facebook IDB** - iOS automation tool:
+   MacOS's Python environment is pretty borked at the moment, it's best to use brew and pipx to manage the installation:
+
    ```bash
    # First, ensure you have a modern python installed via homebrew (if not already done)
    brew install python@3.12
@@ -47,6 +49,13 @@ Enables AI agents (like Claude) to build, run, and interact with Flutter iOS app
 
    # Verify installation
    idb --help
+
+   # Then install idb-companion 
+   brew tap facebook/fb
+   brew install idb-companion
+
+   # Verify it works
+   idb list-targets
    ```
 
 ## Installation

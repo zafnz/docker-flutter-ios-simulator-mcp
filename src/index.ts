@@ -4,10 +4,84 @@ import { setupTransport } from './transport.js';
 import { sessionManager } from './session/manager.js';
 import { logger } from './utils/logger.js';
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+interface CliArgs {
+  port: number;
+  host: string;
+  help: boolean;
+}
+
+function parseArgs(): CliArgs {
+  const args = process.argv.slice(2);
+  let port = parseInt(process.env.PORT || '3000', 10);
+  let host = process.env.HOST || '0.0.0.0';
+  let help = false;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '--help' || arg === '-h') {
+      help = true;
+    } else if (arg === '--port' || arg === '-p') {
+      const portValue = args[++i];
+      if (!portValue || isNaN(parseInt(portValue, 10))) {
+        console.error('Error: --port requires a numeric value');
+        process.exit(1);
+      }
+      port = parseInt(portValue, 10);
+    } else if (arg === '--host') {
+      const hostValue = args[++i];
+      if (!hostValue) {
+        console.error('Error: --host requires a value');
+        process.exit(1);
+      }
+      host = hostValue;
+    } else {
+      console.error(`Error: Unknown argument: ${arg}`);
+      console.error('Use --help to see available options');
+      process.exit(1);
+    }
+  }
+
+  return { port, host, help };
+}
+
+function showHelp(): void {
+  console.log(`
+flutter-ios-mcp - Model Context Protocol server for Flutter iOS development
+
+USAGE:
+  flutter-ios-mcp [OPTIONS]
+
+OPTIONS:
+  -p, --port <port>    Port to listen on (default: 3000)
+      --host <host>    Host address to bind to (default: 0.0.0.0)
+  -h, --help           Show this help message
+
+ENVIRONMENT VARIABLES:
+  PORT                 Port to listen on (overridden by --port)
+  HOST                 Host address to bind to (overridden by --host)
+  LOG_LEVEL            Logging level (debug, info, warn, error)
+
+EXAMPLES:
+  flutter-ios-mcp
+  flutter-ios-mcp --port 8080
+  flutter-ios-mcp --port 3000 --host localhost
+  PORT=8080 flutter-ios-mcp
+
+For more information, visit: https://github.com/yourusername/flutter-ios-mcp
+`);
+}
 
 async function main(): Promise<void> {
+  const { port, host, help } = parseArgs();
+
+  if (help) {
+    showHelp();
+    process.exit(0);
+  }
+
+  const PORT = port;
+  const HOST = host;
   const app = express();
 
   // Middleware
