@@ -9,7 +9,7 @@ Enables AI agents (like Claude) inside a Docker container to build, run, and int
 - 🎯 **Session-based Development** - Isolated simulator and Flutter process per session
 - 🔥 **Hot Reload & Restart** - Instant code updates without full rebuilds
 - 📱 **UI Automation** - Tap, swipe, type, and interact with the simulator
-- 📸 **Visual Feedback** - Screenshots returned as images (Docker-compatible)
+- 📸 **Visual Feedback** - Screenshots returned as images + HTTP URLs (accessible from anywhere)
 - 🔍 **Accessibility Tree** - Inspect UI elements and hierarchy
 - 📊 **Live Logs** - Real-time Flutter build output and app logs
 - 🌐 **HTTP Transport** - Works from Docker containers (no filesystem access needed)
@@ -182,7 +182,7 @@ The MCP server provides these tools to AI agents:
 - `flutter_stop` - Stop the running app
 
 **UI Interaction:**
-- `screenshot` - Capture and view the simulator screen
+- `screenshot` - Capture and view the simulator screen (returns image + HTTP URL)
 - `ui_tap` - Tap at coordinates
 - `ui_swipe` - Swipe gestures (scrolling, swiping)
 - `ui_type` - Enter text into fields
@@ -216,7 +216,8 @@ flutter_logs({
 
 // 4. Take a screenshot to see the app
 screenshot({ sessionId: "abc-123" })
-// Returns image directly in response!
+// Returns image directly in response + HTTP URL!
+// Example URL: http://localhost:3000/screenshot/abc-123-1234567890.png
 
 // 5. Interact with the UI
 ui_tap({ sessionId: "abc-123", x: 200, y: 400 })
@@ -325,7 +326,9 @@ By default, the server:
 
 ### Screenshots not appearing
 - Screenshots are returned as images in the MCP response
-- They work automatically with Docker containers (no filesystem needed)
+- An HTTP URL is also provided to fetch the screenshot (e.g., http://localhost:3000/screenshot/session-123-1234567890.png)
+- The URL works from anywhere - browsers, Docker containers, or HTTP clients
+- Screenshots are saved to /tmp/mcp-screenshots/ on the server
 
 ### First Flutter build is slow
 - First build can take 1-2 minutes (normal)
@@ -363,7 +366,7 @@ src/
 1. **Session-based Isolation**: Each session creates a dedicated iOS Simulator and Flutter process
 2. **HTTP Transport**: MCP protocol over HTTP (works from Docker containers)
 3. **Log Buffering**: Flutter output is buffered in memory, retrieved via polling
-4. **Image Transport**: Screenshots are returned as base64 PNG in MCP responses
+4. **Screenshot Delivery**: Screenshots returned as base64 PNG in MCP responses AND saved to disk with HTTP URL for easy access
 5. **UI Automation**: Uses Facebook IDB for simulator interaction
 
 ## Contributing

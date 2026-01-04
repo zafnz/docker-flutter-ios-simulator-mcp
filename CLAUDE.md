@@ -26,7 +26,7 @@ The MCP server provides these tools to AI agents:
 - `flutter_stop` - Stop the running app
 
 **UI Interaction:**
-- `screenshot` - Capture and view the simulator screen
+- `screenshot` - Capture and view the simulator screen (returns image + HTTP URL)
 - `ui_tap` - Tap at coordinates
 - `ui_swipe` - Swipe gestures (scrolling, swiping)
 - `ui_type` - Enter text into fields
