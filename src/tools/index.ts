@@ -369,7 +369,7 @@ export function registerTools(mcpServer: McpServer): void {
       },
       {
         name: 'screenshot',
-        description: 'Capture a screenshot of the current simulator screen. Returns the image directly in the response as PNG data - you will see the image automatically (no need to save to file). Essential for understanding what is currently displayed and identifying UI elements for interaction. Works seamlessly from Docker containers.',
+        description: 'Capture a screenshot of the current simulator screen. Returns the image directly in the response as PNG data AND provides an HTTP URL to fetch the screenshot. You will see the image automatically, and can also access it via the provided URL (e.g., http://localhost:3000/screenshot/session-123-1234567890.png). The URL works from anywhere - browsers, Docker containers, or HTTP clients. Essential for understanding what is currently displayed and identifying UI elements for interaction.',
         inputSchema: {
           type: 'object',
           properties: {
