@@ -1,4 +1,5 @@
 import { FlutterProcessManager } from '../flutter/process.js';
+import { FlutterTestManager } from '../flutter/test-manager.js';
 
 export interface Session {
   id: string;
@@ -8,6 +9,7 @@ export interface Session {
   createdAt: Date;
   lastActivityAt: Date;
   flutterProcessManager?: FlutterProcessManager;
+  testManager?: FlutterTestManager;
 }
 
 export interface CreateSessionParams {

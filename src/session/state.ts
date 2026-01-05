@@ -47,6 +47,10 @@ class SessionState {
   size(): number {
     return this.sessions.size;
   }
+
+  keys(): string[] {
+    return Array.from(this.sessions.keys());
+  }
 }
 
 export const sessionState = new SessionState();

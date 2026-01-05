@@ -273,6 +273,15 @@ export class SessionManager {
   }
 
   /**
+   * Get all session IDs.
+   *
+   * @returns Array of all session IDs
+   */
+  getAllSessionIds(): string[] {
+    return Array.from(sessionState.keys());
+  }
+
+  /**
    * Get the pre-build script command if configured.
    *
    * @returns Pre-build script command, or undefined if not set

@@ -14,7 +14,6 @@ import {
   flutterCommandSchema,
   flutterLogsSchema,
   flutterBuildSchema,
-  flutterTestSchema,
   flutterCleanSchema,
   handleFlutterRun,
   handleFlutterStop,
@@ -22,9 +21,16 @@ import {
   handleFlutterHotRestart,
   handleFlutterLogs,
   handleFlutterBuild,
-  handleFlutterTest,
   handleFlutterClean,
 } from './flutter-commands.js';
+import {
+  flutterTestSchema,
+  flutterTestResultsSchema,
+  flutterTestLogsSchema,
+  handleFlutterTest,
+  handleFlutterTestResults,
+  handleFlutterTestLogs,
+} from './flutter-test.js';
 import {
   uiTapSchema,
   uiTypeSchema,
@@ -217,7 +223,7 @@ export function registerTools(mcpServer: McpServer): void {
       {
         name: 'flutter_test',
         description:
-          'Run Flutter tests and return the results. This executes all tests (or specific test files if path is provided) and returns the complete test output including pass/fail status. Useful for continuous integration and verifying code quality.',
+          'Begin a Flutter test run. Returns a reference number that can be used with flutter_test_results and flutter_test_logs to monitor progress and retrieve results. Tests run asynchronously in the background - use flutter_test_results to check progress and flutter_test_logs to see detailed output. Supports filtering by test name pattern and tags.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -225,17 +231,59 @@ export function registerTools(mcpServer: McpServer): void {
               type: 'string',
               description: 'Session ID from session_start',
             },
-            path: {
+            testNameMatch: {
               type: 'string',
-              description: 'Optional path to specific test file or directory (e.g., "test/widget_test.dart"). If omitted, runs all tests.',
+              description: 'Optional regular expression to match test names (e.g., "test_login*" or "widget.*"). Only matching tests will run.',
             },
-            additionalArgs: {
+            timeout: {
+              type: 'number',
+              description: 'Optional timeout in minutes (default: 10). Tests will be terminated if they exceed this duration.',
+            },
+            tags: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Additional Flutter test arguments (e.g., ["--coverage", "--reporter=json"])',
+              description: 'Optional array of tags. Only tests with ALL specified tags will run (e.g., ["unit", "database"])',
             },
           },
           required: ['sessionId'],
+        },
+      },
+      {
+        name: 'flutter_test_results',
+        description:
+          'Get the current progress and results of a test run started with flutter_test. Returns number of tests completed, passed, failed, and whether the run is complete. Use showAllTestNames=true to get arrays of all passing and failing test names. Poll this endpoint to monitor long-running test suites.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            reference: {
+              type: 'number',
+              description: 'Test run reference number from flutter_test',
+            },
+            showAllTestNames: {
+              type: 'boolean',
+              description: 'If true, include arrays of all passing and failing test names in the response (default: false)',
+            },
+          },
+          required: ['reference'],
+        },
+      },
+      {
+        name: 'flutter_test_logs',
+        description:
+          'Retrieve detailed logs from a test run. By default returns only failing test logs (failures and errors). Set showAll=true to get logs for all tests including passes. Each log entry contains the test name and its complete output (error messages, stack traces, print statements).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            reference: {
+              type: 'number',
+              description: 'Test run reference number from flutter_test',
+            },
+            showAll: {
+              type: 'boolean',
+              description: 'If true, show logs for all tests. If false (default), show only failing test logs.',
+            },
+          },
+          required: ['reference'],
         },
       },
       {
@@ -471,7 +519,23 @@ export function registerTools(mcpServer: McpServer): void {
 
         case 'flutter_test': {
           const parsed = flutterTestSchema.parse(args);
-          const result = await handleFlutterTest(parsed);
+          const result = handleFlutterTest(parsed);
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        case 'flutter_test_results': {
+          const parsed = flutterTestResultsSchema.parse(args);
+          const result = handleFlutterTestResults(parsed);
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        case 'flutter_test_logs': {
+          const parsed = flutterTestLogsSchema.parse(args);
+          const result = handleFlutterTestLogs(parsed);
           return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           };
