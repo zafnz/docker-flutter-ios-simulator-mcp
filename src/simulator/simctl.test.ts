@@ -23,13 +23,14 @@ describe('simctl', () => {
   });
 
   describe('listDeviceTypes', () => {
-    it('should list iPhone device types', async () => {
+    it('should list iOS device types (iPhone and iPad)', async () => {
       mockExecFile.mockResolvedValue({
         stdout: JSON.stringify({
           devicetypes: [
             { name: 'iPhone 16 Pro', identifier: 'com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro' },
             { name: 'iPhone 15', identifier: 'com.apple.CoreSimulator.SimDeviceType.iPhone-15' },
             { name: 'iPad Pro', identifier: 'com.apple.CoreSimulator.SimDeviceType.iPad-Pro' },
+            { name: 'Apple Watch Series 9', identifier: 'com.apple.CoreSimulator.SimDeviceType.Watch-Series-9' },
           ],
         }),
         stderr: '',
@@ -38,9 +39,10 @@ describe('simctl', () => {
 
       const types = await listDeviceTypes();
 
-      expect(types).toHaveLength(2);
+      expect(types).toHaveLength(3);
       expect(types[0].name).toBe('iPhone 16 Pro');
       expect(types[1].name).toBe('iPhone 15');
+      expect(types[2].name).toBe('iPad Pro');
     });
 
     it('should throw error on failure', async () => {

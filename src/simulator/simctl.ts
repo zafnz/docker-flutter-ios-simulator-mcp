@@ -23,12 +23,13 @@ export async function listDeviceTypes(): Promise<DeviceType[]> {
 
   const deviceTypes = output.devicetypes || [];
 
-  const iPhoneTypes = deviceTypes.filter((dt) =>
-    dt.name.toLowerCase().includes('iphone')
-  );
+  const iosDeviceTypes = deviceTypes.filter((dt) => {
+    const name = dt.name.toLowerCase();
+    return name.includes('iphone') || name.includes('ipad');
+  });
 
-  logger.debug('Found device types', { count: iPhoneTypes.length });
-  return iPhoneTypes;
+  logger.debug('Found device types', { count: iosDeviceTypes.length });
+  return iosDeviceTypes;
 }
 
 export async function getDeviceTypeIdentifier(deviceName: string): Promise<string> {
