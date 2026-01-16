@@ -240,13 +240,17 @@ export function registerTools(mcpServer: McpServer): void {
       {
         name: 'flutter_test',
         description:
-          'Begin a Flutter test run. Returns a reference number that can be used with flutter_test_results and flutter_test_logs to monitor progress and retrieve results. Tests run asynchronously in the background - use flutter_test_results to check progress and flutter_test_logs to see detailed output. Supports filtering by test name pattern and tags.',
+          'Begin a Flutter test run. Returns a reference number that can be used with flutter_test_results and flutter_test_logs to monitor progress and retrieve results. Tests run asynchronously in the background - use flutter_test_results to check progress and flutter_test_logs to see detailed output. Supports filtering by test file/directory, test name pattern, and tags.',
         inputSchema: {
           type: 'object',
           properties: {
             sessionId: {
               type: 'string',
               description: 'Session ID from session_start',
+            },
+            testTarget: {
+              type: 'string',
+              description: 'Optional test file or directory to run (e.g., "test/widget_test.dart" or "test/unit/"). Path must be relative to project root. Cannot contain ".." for security.',
             },
             testNameMatch: {
               type: 'string',

@@ -4,10 +4,11 @@ These are the specs for implementing the full flutter test functionality:
 
 ## tools
 ### flutter_test
-Begin a flutter test run, takes an optional wildcard test name that will limit the run to only those tests:
-   test_name_match="test_match*"
-   timeout=10 #(10 minutes)
-   tags # Only run tests with the specified tags.
+Begin a flutter test run with optional filtering:
+   testTarget="test/unit/" # Specific test file or directory (relative path, no ".." allowed)
+   testNameMatch="test_match*" # Regex to match test names
+   timeout=10 # Timeout in minutes (default: 10)
+   tags=["unit"] # Only run tests with specified tags
 
 Returns a reference that can be passed to get the results of the test:
 ```json

@@ -2,9 +2,11 @@
 
 export interface FlutterTestOptions {
   worktreePath: string;
+  testTarget?: string; // specific test file or directory (relative to project root)
   testNameMatch?: string; // --name flag (regex)
   timeout?: number; // timeout in minutes
   tags?: string[]; // --tags flag
+  deviceId?: string; // --device flag (simulator UDID)
 }
 
 export interface FlutterTestEvent {

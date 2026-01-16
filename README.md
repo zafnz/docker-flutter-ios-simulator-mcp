@@ -175,7 +175,7 @@ The MCP server provides these tools to AI agents:
 **Flutter Development:**
 - `flutter_run` - Build and launch your app
 - `flutter_build` - Build iOS app without running (for CI/deployment)
-- `flutter_test` - Run Flutter tests and return results
+- `flutter_test` - Run Flutter tests (supports filtering by file/directory, test name, and tags)
 - `flutter_clean` - Clean build cache and artifacts
 - `flutter_logs` - Monitor build progress and app output
 - `flutter_hot_reload` - Apply code changes instantly
@@ -232,7 +232,21 @@ ui_tap({ sessionId: "abc-123", x: 200, y: 400 })
 // 6. Make code changes, then hot reload
 flutter_hot_reload({ sessionId: "abc-123" })
 
-// 7. Clean up when done
+// 7. Run tests (all tests, or filter by file/directory)
+flutter_test({ sessionId: "abc-123" })
+// Or run specific tests:
+flutter_test({
+  sessionId: "abc-123",
+  testTarget: "test/unit/",  // Run only tests in this directory
+  testNameMatch: "login.*"   // Further filter by test name
+})
+// Returns: { reference: 1 }
+
+// 8. Check test progress
+flutter_test_results({ reference: 1 })
+// Returns: { tests_complete: 10, tests_total: 20, passes: 8, fails: 2, complete: false }
+
+// 9. Clean up when done
 session_end({ sessionId: "abc-123" })
 ```
 

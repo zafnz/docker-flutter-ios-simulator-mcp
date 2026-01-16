@@ -6,6 +6,12 @@ import { logger } from '../utils/logger.js';
 // Zod schemas for tool inputs
 export const flutterTestSchema = z.object({
   sessionId: z.string().describe('Session ID'),
+  testTarget: z
+    .string()
+    .optional()
+    .describe(
+      'Specific test file or directory to run (e.g., "test/widget_test.dart" or "test/unit/"). Path must be relative to project root.'
+    ),
   testNameMatch: z
     .string()
     .optional()
@@ -65,12 +71,26 @@ export function handleFlutterTest(
     session.testManager = new FlutterTestManager();
   }
 
+  // Validate testTarget if provided
+  if (args.testTarget) {
+    // Prevent directory traversal
+    if (args.testTarget.includes('..')) {
+      throw new Error('testTarget cannot contain ".." (directory traversal not allowed)');
+    }
+    // Prevent absolute paths
+    if (args.testTarget.startsWith('/')) {
+      throw new Error('testTarget must be a relative path');
+    }
+  }
+
   // Start the test run
   const reference = session.testManager.start({
     worktreePath: session.worktreePath,
+    testTarget: args.testTarget,
     testNameMatch: args.testNameMatch,
     timeout: args.timeout ?? 10, // Default 10 minutes
     tags: args.tags,
+    deviceId: session.simulatorUdid,
   });
 
   return { reference };

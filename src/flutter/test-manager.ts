@@ -23,9 +23,11 @@ export class FlutterTestManager {
   start(options: FlutterTestOptions): number {
     logger.info('Starting Flutter test', {
       worktreePath: options.worktreePath,
+      testTarget: options.testTarget,
       testNameMatch: options.testNameMatch,
       tags: options.tags,
       timeout: options.timeout,
+      deviceId: options.deviceId,
     });
 
     const reference = globalNextReference++;
@@ -60,6 +62,16 @@ export class FlutterTestManager {
       // Convert minutes to seconds
       const timeoutSeconds = options.timeout * 60;
       args.push('--timeout', `${String(timeoutSeconds)}s`);
+    }
+
+    // Add device ID (simulator UDID)
+    if (options.deviceId) {
+      args.push('--device-id', options.deviceId);
+    }
+
+    // Add test target (file or directory)
+    if (options.testTarget) {
+      args.push(options.testTarget);
     }
 
     this.process = spawnStreaming('flutter', args, {
